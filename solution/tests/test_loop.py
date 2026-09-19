@@ -96,3 +96,18 @@ def test_model_unavailable_stops_immediately():
     assert result.stop_reason == "model_unavailable"
     assert model.calls == 1  # no pointless immediate retry
     assert kinds(result)[-1] == "stopped"
+
+def test_malformed_tool_result_is_a_visible_failure(monkeypatch):
+    from solution.agent import tools
+
+    bad = tools.Tool("bad_tool", "returns something unserializable",
+                     tools.GetServiceStatusArgs, lambda args: object())
+    monkeypatch.setitem(tools.TOOLS, "bad_tool", bad)
+    model = FakeModel([call("bad_tool", service="checkout-api"), answer()])
+
+    result = run_agent("Try the bad tool", model)
+
+    assert result.stop_reason == "final_answer"
+    errors = [e for e in result.trace.events if e.kind == "error"]
+    assert errors and errors[0].data["source"] == "tool"
+    assert "not JSON serializable" in errors[0].data["message"]

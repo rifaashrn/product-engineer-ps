@@ -9,7 +9,8 @@ from .trace import Trace
 
 @dataclass
 class RunResult:
-    stop_reason: str  # "final_answer" | "max_steps_reached" | "too_many_failures"
+    # "final_answer" | "max_steps_reached" | "too_many_failures" | "model_unavailable"
+    stop_reason: str
     final_answer: FinalAnswer | None
     trace: Trace
     steps_used: int
@@ -73,6 +74,7 @@ def run_agent(
 
         try:
             result = run_tool(decision.tool, decision.arguments)
+            payload = json.dumps(result)  # a malformed result is a tool failure too
         except Exception as exc:  # tool boundary: nothing a tool does may crash the loop
             failures += 1
             message = f"{type(exc).__name__}: {exc}"
@@ -87,7 +89,7 @@ def run_agent(
         # 4. Success: record the evidence and give it back to the model.
         failures = 0
         trace.add(step, "tool_result", tool=decision.tool, result=result)
-        messages.append({"role": "tool", "content": json.dumps(result)})
+        messages.append({"role": "tool", "content": payload})
 
     return _stop(trace, max_steps, "max_steps_reached",
                  f"Reached the limit of {max_steps} steps without a final answer.")
