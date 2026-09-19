@@ -34,3 +34,7 @@ def test_system_prompt_lists_every_tool():
     prompt = build_system_prompt()
     for name in ("search_logs", "get_metrics", "get_service_status"):
         assert name in prompt
+
+
+def test_system_prompt_lists_known_services():
+    assert "payments-db" in build_system_prompt()

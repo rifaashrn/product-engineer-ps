@@ -5,11 +5,15 @@ from typing import Annotated, Any, Protocol, Union
 from pydantic import Field, TypeAdapter, ValidationError
 
 from .schemas import FinalAnswer, ModelDecision, ToolCall
-from .tools import TOOLS
+from .tools import TOOLS, known_services
 
 
 class ModelError(Exception):
     """The model returned something unusable (bad JSON, wrong shape, API error)."""
+
+
+class ModelUnavailable(ModelError):
+    """Rate limit or outage. Retrying immediately would not help."""
 
 
 class ModelAdapter(Protocol):
@@ -71,6 +75,8 @@ question using ONLY evidence returned by tools.
 Available tools:
 {TOOLS}
 
+Known services (use these exact names): {SERVICES}
+
 On every turn reply with exactly one JSON object and nothing else.
 
 To call a tool:
@@ -81,6 +87,7 @@ When you have enough evidence, give the final answer:
 
 Rules:
 - Call one tool per turn.
+- Never guess service names; use the known services above.
 - If a tool returns an error, read it and try a different approach.
 - "evidence" may contain only facts that appear in tool results. Put your own reasoning only in "conclusion".
 - Keep "rationale" to one short sentence. Do not include private reasoning."""
@@ -91,7 +98,11 @@ def build_system_prompt() -> str:
     for tool in TOOLS.values():
         schema = json.dumps(tool.args_model.model_json_schema()["properties"])
         lines.append(f"- {tool.name}: {tool.description} Arguments: {schema}")
-    return _SYSTEM_PROMPT_TEMPLATE.replace("{TOOLS}", "\n".join(lines))
+    return (
+        _SYSTEM_PROMPT_TEMPLATE
+        .replace("{TOOLS}", "\n".join(lines))
+        .replace("{SERVICES}", ", ".join(known_services()))
+    )
 
 
 def _to_transcript(messages: list[dict[str, Any]]) -> str:
@@ -130,5 +141,10 @@ class GeminiModel:
             )
             text = response.text
         except Exception as exc:
+            code = getattr(exc, "code", None)
+            if code in (429, 503) or "RESOURCE_EXHAUSTED" in str(exc):
+                raise ModelUnavailable(
+                    f"Gemini is rate-limited or unavailable ({code or 'quota exceeded'})"
+                ) from exc
             raise ModelError(f"Gemini API error: {exc}") from exc
         return parse_decision(text)

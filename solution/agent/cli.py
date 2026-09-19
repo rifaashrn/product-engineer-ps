@@ -1,3 +1,4 @@
+import logging
 import argparse
 import json
 import sys
@@ -49,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     load_dotenv()
+    logging.getLogger("google_genai").setLevel(logging.ERROR)
     try:
         model = FakeModel(SCRIPTS[args.fake]) if args.fake else GeminiModel()
     except ModelError as exc:
@@ -60,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     _print_trace(result)
     _print_answer(result)
 
-    path = args.runs_dir / f"run-{datetime.now():%Y%m%d-%H%M%S}.jsonl"
+    path = args.runs_dir / f"run-{datetime.now():%Y%m%d-%H%M%S-%f}.jsonl"
     result.trace.save(path)
     print(f"\nTrace saved to {path}")
     return 0 if result.stop_reason == "final_answer" else 1

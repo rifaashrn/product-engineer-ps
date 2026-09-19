@@ -16,6 +16,18 @@ def _load(filename: str) -> Any:
     return json.loads((DATA_DIR / filename).read_text(encoding="utf-8"))
 
 
+def known_services() -> list[str]:
+    return sorted(_load("status.json"))
+
+
+def _require_known_service(service: str) -> None:
+    # An unknown name must be an error, not an empty result: "no logs" and
+    # "that service does not exist" mean very different things as evidence.
+    known = known_services()
+    if service not in known:
+        raise ToolError(f"Unknown service '{service}'. Known services: {known}")
+
+
 # --- Argument schemas: what each tool accepts ---
 
 class SearchLogsArgs(BaseModel):
@@ -35,6 +47,7 @@ class GetServiceStatusArgs(BaseModel):
 # --- The tools themselves ---
 
 def search_logs(args: SearchLogsArgs) -> list[dict]:
+    _require_known_service(args.service)
     keyword = args.keyword.lower()
     return [
         entry for entry in _load("logs.json")
@@ -43,14 +56,15 @@ def search_logs(args: SearchLogsArgs) -> list[dict]:
 
 
 def get_metrics(args: GetMetricsArgs) -> list[dict]:
-    metrics = _load("metrics.json")
-    if args.service not in metrics:
-        raise ToolError(f"Unknown service: {args.service}")
-    series = metrics[args.service].get(args.metric)
+    _require_known_service(args.service)
+    service_metrics = _load("metrics.json").get(args.service)
+    if service_metrics is None:
+        raise ToolError(f"No metrics are recorded for {args.service}")
+    series = service_metrics.get(args.metric)
     if series is None:
         raise ToolError(
             f"Unknown metric '{args.metric}' for {args.service}. "
-            f"Available: {sorted(metrics[args.service])}"
+            f"Available: {sorted(service_metrics)}"
         )
     return series
 
@@ -59,10 +73,8 @@ def get_service_status(args: GetServiceStatusArgs) -> dict:
     # Deliberately broken so we can demo tool-failure handling (AC4).
     if args.service == "billing-worker":
         raise ToolError("Status backend timed out for billing-worker")
-    status = _load("status.json")
-    if args.service not in status:
-        raise ToolError(f"Unknown service: {args.service}")
-    return status[args.service]
+    _require_known_service(args.service)
+    return _load("status.json")[args.service]
 
 
 # --- Registry: one place that knows every tool ---

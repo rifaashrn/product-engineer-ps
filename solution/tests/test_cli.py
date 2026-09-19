@@ -15,3 +15,8 @@ def test_fake_limit_demo_reports_the_stop(tmp_path, capsys):
     out = capsys.readouterr().out
     assert code == 1
     assert "max_steps_reached" in out
+
+def test_each_run_saves_its_own_trace_file(tmp_path):
+    main(["--fake", "multi", "--runs-dir", str(tmp_path)])
+    main(["--fake", "failure", "--runs-dir", str(tmp_path)])
+    assert len(list(tmp_path.glob("*.jsonl"))) == 2

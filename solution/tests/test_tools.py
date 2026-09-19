@@ -22,3 +22,8 @@ def test_missing_argument_is_rejected():
 def test_failing_tool_raises_tool_error():
     with pytest.raises(ToolError, match="timed out"):
         run_tool("get_service_status", {"service": "billing-worker"})
+
+def test_unknown_service_error_lists_valid_services():
+    with pytest.raises(ToolError, match="Known services") as info:
+        run_tool("search_logs", {"service": "payment", "keyword": "error"})
+    assert "checkout-api" in str(info.value)

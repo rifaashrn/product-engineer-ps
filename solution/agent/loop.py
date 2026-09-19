@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 
-from .models import ModelAdapter, ModelError
+from .models import ModelAdapter, ModelError, ModelUnavailable
 from .schemas import FinalAnswer
 from .tools import run_tool
 from .trace import Trace
@@ -41,6 +41,11 @@ def run_agent(
         # 1. Ask the model what to do next.
         try:
             decision = model.next_decision(messages)
+        except ModelUnavailable as exc:
+            # Rate limit or outage: retrying immediately cannot help, so stop now.
+            trace.add(step, "error", source="model", message=str(exc))
+            return _stop(trace, step, "model_unavailable",
+                         "Model unavailable; stopping instead of retrying immediately.")
         except ModelError as exc:
             failures += 1
             trace.add(step, "error", source="model", message=str(exc))

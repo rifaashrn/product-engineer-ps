@@ -1,5 +1,5 @@
 from solution.agent.loop import run_agent
-from solution.agent.models import FakeModel, ModelError
+from solution.agent.models import FakeModel, ModelError, ModelUnavailable
 from solution.agent.schemas import FinalAnswer, ToolCall
 
 
@@ -87,3 +87,12 @@ def test_invalid_model_output_is_logged_and_retried():
     assert result.stop_reason == "final_answer"
     errors = [e for e in result.trace.events if e.kind == "error"]
     assert errors[0].data["source"] == "model"
+
+def test_model_unavailable_stops_immediately():
+    model = FakeModel([ModelUnavailable("rate limited"), answer()])
+
+    result = run_agent("Anything", model)
+
+    assert result.stop_reason == "model_unavailable"
+    assert model.calls == 1  # no pointless immediate retry
+    assert kinds(result)[-1] == "stopped"
