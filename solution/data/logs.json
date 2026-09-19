@@ -1,0 +1,8 @@
+[
+  {"timestamp": "2026-09-18T13:58:03Z", "service": "checkout-api", "level": "INFO", "message": "Order 88121 created"},
+  {"timestamp": "2026-09-18T14:01:55Z", "service": "payments-db", "level": "WARN", "message": "Connection pool exhausted: 100/100 connections in use"},
+  {"timestamp": "2026-09-18T14:02:11Z", "service": "checkout-api", "level": "ERROR", "message": "Timeout connecting to payments-db after 5000ms"},
+  {"timestamp": "2026-09-18T14:02:19Z", "service": "checkout-api", "level": "ERROR", "message": "Timeout connecting to payments-db after 5000ms"},
+  {"timestamp": "2026-09-18T14:03:40Z", "service": "checkout-api", "level": "ERROR", "message": "Payment failed for order 88130: upstream unavailable"},
+  {"timestamp": "2026-09-18T14:05:00Z", "service": "search-api", "level": "INFO", "message": "Reindex completed"}
+]

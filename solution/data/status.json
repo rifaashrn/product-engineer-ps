@@ -1,0 +1,5 @@
+{
+  "checkout-api": {"status": "degraded", "detail": "Elevated error rate since 14:02 UTC"},
+  "payments-db": {"status": "degraded", "detail": "Connection pool saturated"},
+  "search-api": {"status": "healthy", "detail": "No issues"}
+}

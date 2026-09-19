@@ -1,0 +1,19 @@
+{
+  "checkout-api": {
+    "error_rate_pct": [
+      {"timestamp": "2026-09-18T13:55:00Z", "value": 0.4},
+      {"timestamp": "2026-09-18T14:05:00Z", "value": 38.2}
+    ]
+  },
+  "payments-db": {
+    "connection_pool_usage_pct": [
+      {"timestamp": "2026-09-18T13:55:00Z", "value": 62},
+      {"timestamp": "2026-09-18T14:00:00Z", "value": 100},
+      {"timestamp": "2026-09-18T14:05:00Z", "value": 100}
+    ],
+    "cpu_pct": [
+      {"timestamp": "2026-09-18T13:55:00Z", "value": 35},
+      {"timestamp": "2026-09-18T14:05:00Z", "value": 41}
+    ]
+  }
+}
