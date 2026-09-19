@@ -26,7 +26,7 @@ ModelDecision = Union[ToolCall, FinalAnswer]
 class TraceEvent(BaseModel):
     step: int
     kind: Literal[
-        "model_decision", "tool_call", "tool_result",
+        "objective", "model_decision", "tool_call", "tool_result",
         "error", "final_answer", "stopped",
     ]
     data: dict[str, Any]
