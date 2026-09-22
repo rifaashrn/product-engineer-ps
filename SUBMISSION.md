@@ -6,7 +6,7 @@
 - **Email:** rifasherin958@gmail.com
 - **GitHub:** https://github.com/rifaashrn (repo: https://github.com/rifaashrn/product-engineer-ps, code in `solution/`)
 - **Selected problem:** Problem 4, Observable Agent Loop
-- **Demo video:** [[VIDEO LINK]]
+- **Demo video:** https://www.loom.com/share/7af20c62f4a24d18837879098410dae4
 
 ## Run the project
 
